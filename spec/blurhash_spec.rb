@@ -5,14 +5,22 @@ RSpec.describe Blurhash do
     expect(Blurhash::VERSION).not_to be nil
   end
 
-  let(:pixels) do
-    [255, 0, 0]
+  let(:blurhash) do
+    "LGFFaXYk^6#M@-5c,1J5@[or[Q6."
   end
 
-  let(:width) { 1 }
-  let(:height) { 1 }
+  let(:width) { 2 }
+  let(:height) { 2 }
+  let(:punch) { 1.0 }
 
   it "does something useful" do
-    expect(Blurhash.compress(pixels, width, height)).to eq("data:image/jpg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAoHBwgHBgoICAgFCgoFBQwFBQUFBREJCgUMFxMZGBYTFhUaHysjGh0oHRUWJDUlKC0vMjIyGSI4PTcwPCsxMi8BCgsLBQUFEAUFEC8cFhwvLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vLy8vL//AABEIAAEAAQMBIgACEQEDEQH/xAAVAAEBAAAAAAAAAAAAAAAAAAAABv/EABQQAQAAAAAAAAAAAAAAAAAAAAD/xAAVAQEBAAAAAAAAAAAAAAAAAAAHBv/EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAMAwEAAhEDEQA/AJUBOmZ//9k=")
+    expect(
+      Blurhash.decode(
+        blurhash,
+        width,
+        height,
+        punch: punch
+      )
+    ).to eq([ 177, 118, 164, 119, 100, 170, 138, 155, 178, 108, 126, 131 ])
   end
 end

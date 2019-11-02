@@ -30,11 +30,11 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  blurhash!
   bundler (~> 2.0)
   rake (~> 10.0)
   rake-compiler
   rspec (~> 3.0)
-  blurhash!
 
 BUNDLED WITH
    2.0.2
