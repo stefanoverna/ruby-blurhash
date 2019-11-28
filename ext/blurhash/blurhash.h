@@ -9,6 +9,7 @@ size_t blurhash_decode(
   int width,
   int height,
   float punch,
+  float *homogeneous_transform,
   uint8_t **pixels
 );
 

@@ -2,14 +2,36 @@ require "blurhash/version"
 require "ffi"
 
 module Blurhash
-  def self.decode(blurhash, width, height, punch: 1.0)
+  def self.decode(
+    blurhash,
+    width,
+    height,
+    punch: 1.0,
+    homogeneous_transform: nil
+  )
     out_pointer = FFI::MemoryPointer.new(:pointer)
+
+    transform_pointer = if homogeneous_transform
+                          FFI::MemoryPointer.new(:float, 6).tap do |p|
+                            p.write_array_of_float(
+                              homogeneous_transform[0, 0],
+                              homogeneous_transform[0, 1],
+                              homogeneous_transform[0, 2],
+                              homogeneous_transform[1, 0],
+                              homogeneous_transform[1, 1],
+                              homogeneous_transform[1, 2],
+                            )
+                          end
+                        else
+                          nil
+                        end
 
     out_size_t = Unstable.blurhash_decode(
       blurhash,
       width,
       height,
       punch,
+      transform_pointer,
       out_pointer,
     )
 
@@ -20,6 +42,8 @@ module Blurhash
     Unstable.blurhash_free(out_result)
 
     result
+  ensure
+    FFI.free(transform_pointer) if transform_pointer
   end
 
   module Unstable

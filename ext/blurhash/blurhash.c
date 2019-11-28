@@ -17,6 +17,7 @@ size_t blurhash_decode(
   int width,
   int height,
   float punch,
+  float *transform,
   uint8_t **out_pointer
 ) {
   uint8_t *result = (uint8_t *) malloc(sizeof(uint8_t) * width * height * 3);
@@ -27,7 +28,7 @@ size_t blurhash_decode(
   int ny = (number_of_components / 9) + 1;
 
   float colors[ny * nx][3];
-	memset(colors, 0, sizeof(colors));
+  memset(colors, 0, sizeof(colors));
 
   float real_max_value = ((float) (base83_decode(blurhash + 1, 1) + 1) / 166.0f) * punch;
 
@@ -51,10 +52,20 @@ size_t blurhash_decode(
     for (int x = 0; x < width; x += 1) {
       float r = 0, g = 0, b = 0;
 
+      float px = (float) x / width;
+      float py = (float) y / height;
+
+      float tx = px;
+      float ty = py;
+
+      if (transform) {
+        tx = transform[0] * px + transform[1] * py + transform[2];
+        ty = transform[3] * px + transform[4] * py + transform[5];
+      }
+
       for (int j = 0; j < ny; j += 1) {
         for (int i = 0; i < nx; i += 1) {
-          float basis = cosf(M_PI * (float) x * (float) i / (float) width) *
-            cosf(M_PI * (float) y * (float) j / (float) height);
+          float basis = cosf(M_PI * i * tx) * cosf(M_PI * j * ty);
 
           r += colors[j * nx + i][0] * basis;
           g += colors[j * nx + i][1] * basis;
@@ -79,19 +90,19 @@ void free_pixels(uint8_t *pixels) {
 }
 
 static uint8_t linear_to_srgb(float value) {
-	float v = fmaxf(0, fminf(1, value));
-	if(v <= 0.0031308) return v * 12.92 * 255 + 0.5;
-	else return (1.055 * powf(v, 1 / 2.4) - 0.055) * 255 + 0.5;
+  float v = fmaxf(0, fminf(1, value));
+  if(v <= 0.0031308) return v * 12.92 * 255 + 0.5;
+  else return (1.055 * powf(v, 1 / 2.4) - 0.055) * 255 + 0.5;
 }
 
 static float srgb_to_linear(uint8_t value) {
-	float v = (float) value / 255;
-	if(v <= 0.04045) return v / 12.92;
-	else return powf((v + 0.055) / 1.055, 2.4);
+  float v = (float) value / 255;
+  if(v <= 0.04045) return v / 12.92;
+  else return powf((v + 0.055) / 1.055, 2.4);
 }
 
 static float sign_pow(float value, float exp) {
-	return copysignf(powf(fabsf(value), exp), value);
+  return copysignf(powf(fabsf(value), exp), value);
 }
 
 static char characters[83] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz#$%*+,-.:;=?@[]^_{|}~";
