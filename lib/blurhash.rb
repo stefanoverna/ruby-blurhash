@@ -13,14 +13,14 @@ module Blurhash
 
     transform_pointer = if homogeneous_transform
                           FFI::MemoryPointer.new(:float, 6).tap do |p|
-                            p.write_array_of_float(
+                            p.write_array_of_float([
                               homogeneous_transform[0, 0],
                               homogeneous_transform[0, 1],
                               homogeneous_transform[0, 2],
                               homogeneous_transform[1, 0],
                               homogeneous_transform[1, 1],
                               homogeneous_transform[1, 2],
-                            )
+                            ])
                           end
                         else
                           nil
@@ -43,14 +43,16 @@ module Blurhash
 
     result
   ensure
-    FFI.free(transform_pointer) if transform_pointer
+    if transform_pointer
+      transform_pointer.free
+    end
   end
 
   module Unstable
     extend FFI::Library
     ffi_lib File.join(File.expand_path(__dir__), 'blurhash.' + RbConfig::CONFIG['DLEXT'])
 
-    attach_function :blurhash_decode, %i(string int int float pointer), :size_t
+    attach_function :blurhash_decode, %i(string int int float pointer pointer), :size_t
     attach_function :blurhash_free, %i(pointer), :void
   end
 
