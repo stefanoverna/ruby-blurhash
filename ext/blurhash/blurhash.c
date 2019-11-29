@@ -7,6 +7,7 @@ static uint8_t linear_to_srgb(float value);
 static float srgb_to_linear(uint8_t value);
 static float sign_pow(float value, float exp);
 static int base83_decode(const char *string, const int length);
+static void fill_pixel_with_blurhash(float px, float py, int nx, int ny, float colors[][3], float *r, float *g, float *b);
 
 void blurhash_free(uint8_t *pixels) {
   free(pixels);
@@ -18,6 +19,8 @@ size_t blurhash_decode(
   int height,
   float punch,
   float *transform,
+  enum FillMode fill_mode,
+  uint8_t *fill_color,
   uint8_t **out_pointer
 ) {
   uint8_t *result = (uint8_t *) malloc(sizeof(uint8_t) * width * height * 3);
@@ -26,6 +29,14 @@ size_t blurhash_decode(
 
   int nx = (number_of_components % 9) + 1;
   int ny = (number_of_components / 9) + 1;
+
+  float linear_fill_color[3];
+
+  if (fill_color) {
+    linear_fill_color[0] = srgb_to_linear(fill_color[0]);
+    linear_fill_color[1] = srgb_to_linear(fill_color[1]);
+    linear_fill_color[2] = srgb_to_linear(fill_color[2]);
+  }
 
   float colors[ny * nx][3];
   memset(colors, 0, sizeof(colors));
@@ -64,13 +75,32 @@ size_t blurhash_decode(
       }
 
       if (tx >= 0 && tx < 1.0 && ty >= 0 && ty < 1.0) {
-        for (int j = 0; j < ny; j += 1) {
-          for (int i = 0; i < nx; i += 1) {
-            float basis = cosf(M_PI * i * tx) * cosf(M_PI * j * ty);
+        /* for (int j = 0; j < ny; j += 1) { */
+        /*   for (int i = 0; i < nx; i += 1) { */
+        /*     float basis = cosf(M_PI * i * tx) * cosf(M_PI * j * ty); */
 
-            r += colors[j * nx + i][0] * basis;
-            g += colors[j * nx + i][1] * basis;
-            b += colors[j * nx + i][2] * basis;
+        /*     r += colors[j * nx + i][0] * basis; */
+        /*     g += colors[j * nx + i][1] * basis; */
+        /*     b += colors[j * nx + i][2] * basis; */
+        /*   } */
+        /* } */
+        fill_pixel_with_blurhash(tx, ty, nx, ny, colors, &r, &g, &b);
+      } else {
+        if (fill_mode == SOLID) {
+          r = linear_fill_color[0];
+          g = linear_fill_color[1];
+          b = linear_fill_color[2];
+        } else if (fill_mode == BLUR) {
+          fill_pixel_with_blurhash(px, py, nx, ny, colors, &r, &g, &b);
+        } else {
+          if (tx < 0) {
+            fill_pixel_with_blurhash(0, ty, nx, ny, colors, &r, &g, &b);
+          } else if (tx >= 1) {
+            fill_pixel_with_blurhash(1, ty, nx, ny, colors, &r, &g, &b);
+          } else if (ty < 0) {
+            fill_pixel_with_blurhash(tx, 0, nx, ny, colors, &r, &g, &b);
+          } else if (ty >= 1) {
+            fill_pixel_with_blurhash(tx, 1, nx, ny, colors, &r, &g, &b);
           }
         }
       }
@@ -84,6 +114,27 @@ size_t blurhash_decode(
   *out_pointer = result;
 
   return width * height * 3;
+}
+
+void fill_pixel_with_blurhash(
+  float px,
+  float py,
+  int nx,
+  int ny,
+  float colors[][3],
+  float *r,
+  float *g,
+  float *b
+) {
+  for (int j = 0; j < ny; j += 1) {
+    for (int i = 0; i < nx; i += 1) {
+      float basis = cosf(M_PI * i * px) * cosf(M_PI * j * py);
+
+      *r += colors[j * nx + i][0] * basis;
+      *g += colors[j * nx + i][1] * basis;
+      *b += colors[j * nx + i][2] * basis;
+    }
+  }
 }
 
 void free_pixels(uint8_t *pixels) {

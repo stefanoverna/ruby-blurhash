@@ -7,9 +7,17 @@ module Blurhash
     width,
     height,
     punch: 1.0,
+    fill_mode: :solid,
+    fill_color: [255, 255, 255],
     homogeneous_transform: nil
   )
     out_pointer = FFI::MemoryPointer.new(:pointer)
+
+    fill_color_pointer = if fill_color
+                           FFI::MemoryPointer.new(:uint8, 3).tap do |p|
+                             p.write_array_of_uint8(fill_color)
+                           end
+                         end
 
     transform_pointer = if homogeneous_transform
                           FFI::MemoryPointer.new(:float, 6).tap do |p|
@@ -22,8 +30,6 @@ module Blurhash
                               homogeneous_transform[1, 2],
                             ])
                           end
-                        else
-                          nil
                         end
 
     out_size_t = Unstable.blurhash_decode(
@@ -32,6 +38,8 @@ module Blurhash
       height,
       punch,
       transform_pointer,
+      fill_mode.to_sym,
+      fill_color_pointer,
       out_pointer,
     )
 
@@ -46,13 +54,21 @@ module Blurhash
     if transform_pointer
       transform_pointer.free
     end
+
+    if fill_color_pointer
+      fill_color_pointer.free
+    end
   end
 
   module Unstable
     extend FFI::Library
     ffi_lib File.join(File.expand_path(__dir__), 'blurhash.' + RbConfig::CONFIG['DLEXT'])
 
-    attach_function :blurhash_decode, %i(string int int float pointer pointer), :size_t
+    enum :fill_mode, [:solid, 1,
+                      :blur,
+                      :clamp ]
+
+    attach_function :blurhash_decode, %i(string int int float pointer fill_mode pointer pointer), :size_t
     attach_function :blurhash_free, %i(pointer), :void
   end
 
