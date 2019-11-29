@@ -63,16 +63,17 @@ size_t blurhash_decode(
         ty = transform[3] * px + transform[4] * py + transform[5];
       }
 
-      for (int j = 0; j < ny; j += 1) {
-        for (int i = 0; i < nx; i += 1) {
-          float basis = cosf(M_PI * i * tx) * cosf(M_PI * j * ty);
+      if (tx >= 0 && tx < 1.0 && ty >= 0 && ty < 1.0) {
+        for (int j = 0; j < ny; j += 1) {
+          for (int i = 0; i < nx; i += 1) {
+            float basis = cosf(M_PI * i * tx) * cosf(M_PI * j * ty);
 
-          r += colors[j * nx + i][0] * basis;
-          g += colors[j * nx + i][1] * basis;
-          b += colors[j * nx + i][2] * basis;
+            r += colors[j * nx + i][0] * basis;
+            g += colors[j * nx + i][1] * basis;
+            b += colors[j * nx + i][2] * basis;
+          }
         }
       }
-
 
       *(pointer++) = linear_to_srgb(r);
       *(pointer++) = linear_to_srgb(g);
