@@ -14,7 +14,7 @@ GEM
     parser (3.0.1.0)
       ast (~> 2.4.1)
     rainbow (3.0.0)
-    rake (10.5.0)
+    rake (13.0.3)
     rake-compiler (1.1.1)
       rake
     regexp_parser (2.1.1)
@@ -48,11 +48,12 @@ GEM
 
 PLATFORMS
   x86_64-darwin-19
+  x86_64-linux
 
 DEPENDENCIES
   blurhash!
   bundler (~> 2.0)
-  rake (~> 10.0)
+  rake (~> 13.0)
   rake-compiler
   rspec (~> 3.0)
   rubocop
