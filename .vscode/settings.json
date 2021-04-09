@@ -1,0 +1,8 @@
+{
+  "files.associations": {
+    "*.css": "postcss",
+    "*.s": "ca65",
+    "ios": "c",
+    "__locale": "c"
+  }
+}

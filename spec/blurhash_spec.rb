@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "spec_helper"
 
 RSpec.describe Blurhash do
@@ -19,8 +21,9 @@ RSpec.describe Blurhash do
         blurhash,
         width,
         height,
-        punch: punch
-      )
-    ).to eq([ 177, 118, 164, 119, 100, 170, 138, 155, 178, 108, 126, 131 ])
+        punch: punch,
+        saturation: 0,
+      ),
+    ).to eq([177, 118, 164, 119, 100, 170, 138, 155, 178, 108, 126, 131])
   end
 end

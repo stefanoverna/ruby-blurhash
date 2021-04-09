@@ -18,6 +18,7 @@ size_t blurhash_decode(
   float *homogeneous_transform,
   enum FillMode fill_mode,
   uint8_t *fill_color,
+  int saturation,
   uint8_t **pixels
 );
 

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "blurhash/version"
 require "ffi"
 
@@ -9,7 +11,8 @@ module Blurhash
     punch: 1.0,
     fill_mode: :solid,
     fill_color: [255, 255, 255],
-    homogeneous_transform: nil
+    homogeneous_transform: nil,
+    saturation: 0
   )
     out_pointer = FFI::MemoryPointer.new(:pointer)
 
@@ -22,13 +25,13 @@ module Blurhash
     transform_pointer = if homogeneous_transform
                           FFI::MemoryPointer.new(:float, 6).tap do |p|
                             p.write_array_of_float([
-                              homogeneous_transform[0, 0],
-                              homogeneous_transform[0, 1],
-                              homogeneous_transform[0, 2],
-                              homogeneous_transform[1, 0],
-                              homogeneous_transform[1, 1],
-                              homogeneous_transform[1, 2],
-                            ])
+                                                     homogeneous_transform[0, 0],
+                                                     homogeneous_transform[0, 1],
+                                                     homogeneous_transform[0, 2],
+                                                     homogeneous_transform[1, 0],
+                                                     homogeneous_transform[1, 1],
+                                                     homogeneous_transform[1, 2],
+                                                   ])
                           end
                         end
 
@@ -40,6 +43,7 @@ module Blurhash
       transform_pointer,
       fill_mode.to_sym,
       fill_color_pointer,
+      saturation,
       out_pointer,
     )
 
@@ -51,25 +55,21 @@ module Blurhash
 
     result
   ensure
-    if transform_pointer
-      transform_pointer.free
-    end
+    transform_pointer&.free
 
-    if fill_color_pointer
-      fill_color_pointer.free
-    end
+    fill_color_pointer&.free
   end
 
   module Unstable
     extend FFI::Library
-    ffi_lib File.join(File.expand_path(__dir__), 'blurhash.' + RbConfig::CONFIG['DLEXT'])
+    ffi_lib File.join(File.expand_path(__dir__), "blurhash.#{RbConfig::CONFIG["DLEXT"]}")
 
     enum :fill_mode, [:solid, 1,
                       :blur,
-                      :clamp ]
+                      :clamp]
 
-    attach_function :blurhash_decode, %i(string int int float pointer fill_mode pointer pointer), :size_t
-    attach_function :blurhash_free, %i(pointer), :void
+    attach_function :blurhash_decode, %i[string int int float pointer fill_mode pointer int pointer], :size_t
+    attach_function :blurhash_free, %i[pointer], :void
   end
 
   private_constant :Unstable
