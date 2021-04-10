@@ -137,7 +137,8 @@ size_t blurhash_decode(
       {
         float hsv[3] = {0};
         rgb2hsv(sr, sg, sb, hsv);
-        hsv[1] = fminf(fmaxf(hsv[1] + (float) saturation / 100.0f, 0), 1.0f);
+        float mult = ((float) saturation + 100.0f) / 200.0f * 1.4f;
+        hsv[1] = fminf(fmaxf(hsv[1] * mult, 0), 1.0f);
         hsv2rgb(hsv, pointer);
         pointer += 3;
       }

@@ -12,3 +12,4 @@
 *.a
 .rspec_status
 Makefile
+*.ppm
